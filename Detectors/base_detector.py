@@ -16,7 +16,7 @@ import numpy as np
 import cv2
 import torch
 from Networks.model import create_model, load_model
-from Utils.image import get_affine_transform
+from Utils.utils import get_affine_transform
 
 class BaseDetector(object):
     """

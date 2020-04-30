@@ -20,8 +20,8 @@ import json
 import pycocotools.coco as coco
 from pycocotools.cocoeval import COCOeval
 import torch.utils.data as Data
-from Utils.image import gaussian_radius, draw_umich_gaussian
-from Utils.image import get_affine_transform, affine_transform
+from Utils.utils import gaussian_radius, draw_umich_gaussian
+from Utils.utils import get_affine_transform, affine_transform
 
 class COCO_STYLE(Data.Dataset):
     """

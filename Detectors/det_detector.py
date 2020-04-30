@@ -17,7 +17,7 @@ import numpy as np
 import cv2
 from .base_detector import BaseDetector
 from Networks.decode import ctdet_decode
-from Utils.post_process import ctdet_post_process
+from Utils.utils import ctdet_post_process
 
 class DetDetector(BaseDetector):
     """
