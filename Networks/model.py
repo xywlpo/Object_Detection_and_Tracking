@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+# @Time : 2020年4月20日
+# @Author : Jiang Nan
+# @File : model.py
+# @Software: PyCharm
+# @contact: xywlpo@163.com
+# -*- 功能说明 -*-
+# (1) 根据配置参数选择合适的模型构建函数
+# (2) 模型的保存与加载
+# -*- 功能说明 -*-
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -8,32 +19,45 @@ from .NetArch.resnet import get_center_resnet
 # 通过model_factory字典可以灵活的切换不同的基础网络结构
 model_factory={
     'resnet':get_center_resnet
+    # TODO: 可继续添加新的网络模型
 }
 
-def create_model(arch, heads):
+def create_model(config):
     """
     创建网络结构
-    :param arch: 基础网络结构
-    :param heads: dict类型，存储网络头的名字和相应的feature map channel
-    :return: pytorch网络模型
+    :param config: 参数配置对象
+    :return: pytorch网络模型, 不包含loss部分
     """
-    num_layers = int(arch[arch.find('_') + 1:]) if '_' in arch else 0
-    arch = arch[:arch.find('_')] if '_' in arch else arch
+    num_layers = int(config.ARCH[config.ARCH.find('_') + 1:]) if '_' in config.ARCH else 0
+    arch = config.ARCH[:config.ARCH.find('_')] if '_' in config.ARCH else config.ARCH
     get_model = model_factory[arch]
-    model = get_model(num_layers=num_layers, heads=heads)
+    model = get_model(num_layers=num_layers, heads=config.HEADS, config=config)
     return model
 
 def save_model(path, epoch, model, optimizer=None):
-  if isinstance(model, torch.nn.DataParallel):
-    state_dict = model.module.state_dict()
-  else:
-    state_dict = model.state_dict()
-  data = {'epoch': epoch,
-          'state_dict': state_dict}
-  if not (optimizer is None):
-    data['optimizer'] = optimizer.state_dict()
-  torch.save(data, path)
+    """
+    保存训练过程中的模型文件
+    :param path: 模型文件保存位置
+    :param epoch: 当前的opoch
+    :param model: 模型
+    :param optimizer: 若不设置默认不保存优化器参数, 若要中断恢复则需要传入优化器
+    """
 
+    # 根据是否使用的并行计算, 获取模型参数
+    if isinstance(model, torch.nn.DataParallel):
+        state_dict = model.module.state_dict()
+    else:
+        state_dict = model.state_dict()
+
+    # 要保存的数据内容
+    data = {'epoch': epoch, 'state_dict': state_dict}
+
+    # 保存优化器的参数, 主要为了中断后的恢复训练使用
+    if not (optimizer is None):
+        data['optimizer'] = optimizer.state_dict()
+
+    # 保存模型: epoch, state_dict, [optimizer.state_dict()]
+    torch.save(data, path)
 
 def load_model(model, model_path, optimizer=None, resume=False, lr=None, lr_step=None):
     """

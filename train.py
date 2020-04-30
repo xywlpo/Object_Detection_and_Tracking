@@ -1,59 +1,75 @@
+# -*- coding: utf-8 -*-
+# @Time : 2020年4月30日
+# @Author : Jiang Nan
+# @File : train.py
+# @Software: PyCharm
+# @contact: xywlpo@163.com
+# -*- 功能说明 -*-
+# 模型训练的主函数
+# -*- 功能说明 -*-
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from collections import defaultdict
 import torch
 import torch.utils.data
 from torch.utils.tensorboard import SummaryWriter
 from Datasets.coco_style import COCO_STYLE
 from Networks.model import create_model, save_model
 from Trains.trainer_factory import trainer_factory
-from collections import defaultdict
+from config import Config
 
 def main():
     """
-    模型训练
+    模型训练函数
     :return: none
     """
-    # 创建Tensorboard
+
+    # 创建Tensorboard对象
     writer = SummaryWriter('Log')
 
+    # 创建参数配置类
+    config = Config()
+    config.CURRENT_PROCESS = 'TRAIN'
+
     # 创建训练数据集迭代器
-    train_dataset = COCO_STYLE('./Datasets/Data', 'train')
+    train_dataset = COCO_STYLE(config, 'train')
 
     # 创建模型网络结构
-    arch = 'resnet_18'
-    heads = {'hm': 20, 'wh': 2, 'reg': 2}
-    model = create_model(arch, heads)
+    model = create_model(config)
     print('model has been created')
 
     # 创建优化器
-    learning_rate = 5e-4
-    optimizer = torch.optim.Adam(model.parameters(), learning_rate)
+    optimizer = torch.optim.Adam(model.parameters(), config.LEARNING_RATE)
 
     # 创建训练器
-    device = torch.device('cuda')
-    Trainer = trainer_factory['detection']
+    device = torch.device(config.DEVICE)
+    Trainer = trainer_factory[config.TASK]
     trainer = Trainer(model, optimizer)
-    trainer.set_device([0], device)
+
+    # 将包括loss在内的整个网络, 以及优化器都放到合适的计算设备上
+    trainer.set_device(config.GPU_LIST, device)
 
     # 创建数据生成器
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
-        batch_size=32,
+        batch_size=config.BATCH_SIZE,
         shuffle=True,
-        num_workers=4,
+        num_workers=config.NUMBERS_OF_WORKERS,
         pin_memory=True,
         drop_last=True
     )
 
     # 开始训练
+    # TODO: 尚未加入验证集的评估
     print('starting training...')
-    for epoch in range(200):
-        loss_list = trainer.train(epoch, 10, train_loader)
+    for epoch in range(config.ALL_EPOCHES):
+        loss_list = trainer.train(epoch, config.STEPS_OF_EPOCH, train_loader)
         for key in loss_list:
             writer.add_scalar("train_{}".format(key), loss_list[key], epoch)
-        if epoch % 40 == 0:
+        if epoch % config.INTERVAL_OF_EPOCH == 0:
             save_model('./model_epoch_{}.pth'.format(epoch), epoch, model, optimizer)
 
 if __name__ == '__main__':

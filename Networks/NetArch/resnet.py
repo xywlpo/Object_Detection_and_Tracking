@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+# @Time : 2020年4月30日
+# @Author : Jiang Nan
+# @File : resnet.py
+# @Software: PyCharm
+# @contact: xywlpo@163.com
+# -*- 功能说明 -*-
+# 构建基于ResNet的CenterNet网络结构
+# -*- 功能说明 -*-
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -7,25 +17,23 @@ import torch
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 
-BN_MOMENTUM = 0.1
-
-model_urls = {
-    'resnet18': 'https://download.pytorch.org/models/resnet18-5c106cde.pth',
-    'resnet34': 'https://download.pytorch.org/models/resnet34-333f7ec4.pth',
-    'resnet50': 'https://download.pytorch.org/models/resnet50-19c8e357.pth',
-    'resnet101': 'https://download.pytorch.org/models/resnet101-5d3b4d8f.pth',
-    'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth',
-}
+# 以下两个全局参数通过config中对应的参数设置
+BN_MOMENTUM = 0
+RESNET_MODEL_URLS = {}
 
 def conv3x3(in_planes, out_planes, stride=1):
-    """3x3 convolution with padding"""
+    """
+    构建3x3卷积(主要这样频繁调用时代码能短点...)
+    :param in_planes:
+    """
     return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
                      padding=1, bias=False)
 
-
 class BasicBlock(nn.Module):
+    """
+    一个BasicBlock的网络结构
+    """
     expansion = 1
-
     def __init__(self, inplanes, planes, stride=1, downsample=None):
         super(BasicBlock, self).__init__()
         self.conv1 = conv3x3(inplanes, planes, stride)
@@ -38,26 +46,22 @@ class BasicBlock(nn.Module):
 
     def forward(self, x):
         residual = x
-
         out = self.conv1(x)
         out = self.bn1(out)
         out = self.relu(out)
-
         out = self.conv2(out)
         out = self.bn2(out)
-
         if self.downsample is not None:
             residual = self.downsample(x)
-
         out += residual
         out = self.relu(out)
-
         return out
 
-
 class Bottleneck(nn.Module):
+    """
+    一个Bottleneck的网络结构
+    """
     expansion = 4
-
     def __init__(self, inplanes, planes, stride=1, downsample=None):
         super(Bottleneck, self).__init__()
         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
@@ -75,39 +79,41 @@ class Bottleneck(nn.Module):
 
     def forward(self, x):
         residual = x
-
         out = self.conv1(x)
         out = self.bn1(out)
         out = self.relu(out)
-
         out = self.conv2(out)
         out = self.bn2(out)
         out = self.relu(out)
-
         out = self.conv3(out)
         out = self.bn3(out)
-
         if self.downsample is not None:
             residual = self.downsample(x)
-
         out += residual
         out = self.relu(out)
-
         return out
-
 
 class PoseResNet(nn.Module):
     """
-    构建用于CenterNet的ResNet网络
+    构建基于ResNet的CenterNet网络
+    继承于torch.nn.Module
     """
     def __init__(self, block, layers, heads, **kwargs):
+        """
+        初始化各网络层
+        :param block: 根据网络层数的不同, 传入相应的block
+        :param layers: 每个stage有多少个block
+        :param heads: CenterNet的网络头
+        :return: None
+        """
+        super(PoseResNet, self).__init__()
+
         self.inplanes = 64
         self.deconv_with_bias = False
         self.heads = heads
 
-        super(PoseResNet, self).__init__()
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3,
-                               bias=False)
+        # 构建Backbone网络
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False)
         self.bn1 = nn.BatchNorm2d(64, momentum=BN_MOMENTUM)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
@@ -116,14 +122,14 @@ class PoseResNet(nn.Module):
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
 
-        # used for deconv layers
+        # 构建反卷积
         self.deconv_layers = self._make_deconv_layer(
             3,
             [256, 256, 256],
             [4, 4, 4],
         )
-        # self.final_layer = []
 
+        # 构建网络头
         for head in sorted(self.heads):
           num_output = self.heads[head]
           fc = nn.Conv2d(
@@ -135,9 +141,10 @@ class PoseResNet(nn.Module):
             )
           self.__setattr__(head, fc)
 
-        # self.final_layer = nn.ModuleList(self.final_layer)
-
     def _make_layer(self, block, planes, blocks, stride=1):
+        """
+        用于构建一个stage
+        """
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
@@ -164,10 +171,12 @@ class PoseResNet(nn.Module):
         elif deconv_kernel == 2:
             padding = 0
             output_padding = 0
-
         return deconv_kernel, padding, output_padding
 
     def _make_deconv_layer(self, num_layers, num_filters, num_kernels):
+        """
+        构建反卷积的函数
+        """
         assert num_layers == len(num_filters), \
             'ERROR: num_deconv_layers is different len(num_deconv_filters)'
         assert num_layers == len(num_kernels), \
@@ -191,7 +200,6 @@ class PoseResNet(nn.Module):
             layers.append(nn.BatchNorm2d(planes, momentum=BN_MOMENTUM))
             layers.append(nn.ReLU(inplace=True))
             self.inplanes = planes
-
         return nn.Sequential(*layers)
 
     def forward(self, x):
@@ -199,53 +207,54 @@ class PoseResNet(nn.Module):
         x = self.bn1(x)
         x = self.relu(x)
         x = self.maxpool(x)
-
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
-
         x = self.deconv_layers(x)
         ret = {}
         for head in self.heads:
             ret[head] = self.__getattr__(head)(x)
         return [ret]
 
-    def init_weights(self, num_layers, pretrained=True):
+    def init_weights(self, num_layers, offline_pretrained_model, pretrained=True):
+        """
+        初始化权重的函数, 通常只有训练时需要使用
+        训练时：Backbone由预训练模型初始化 + 反卷积正态分布/常量初始化 + 网络头正态分布/常量初始化
+        通常bias使用常量初始化, weights使用正态分布初始化
+        """
         if pretrained:
-            # print('=> init resnet deconv weights from normal distribution')
+            # 反卷积参数初始化
             for _, m in self.deconv_layers.named_modules():
                 if isinstance(m, nn.ConvTranspose2d):
-                    # print('=> init {}.weight as normal(0, 0.001)'.format(name))
-                    # print('=> init {}.bias as 0'.format(name))
                     nn.init.normal_(m.weight, std=0.001)
                     if self.deconv_with_bias:
                         nn.init.constant_(m.bias, 0)
                 elif isinstance(m, nn.BatchNorm2d):
-                    # print('=> init {}.weight as 1'.format(name))
-                    # print('=> init {}.bias as 0'.format(name))
                     nn.init.constant_(m.weight, 1)
                     nn.init.constant_(m.bias, 0)
-            # print('=> init final conv weights from normal distribution')
+
+            # 网络头参数初始化
             for head in self.heads:
               final_layer = self.__getattr__(head)
               for i, m in enumerate(final_layer.modules()):
                   if isinstance(m, nn.Conv2d):
                       # nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
-                      # print('=> init {}.weight as normal(0, 0.001)'.format(name))
-                      # print('=> init {}.bias as 0'.format(name))
                       if m.weight.shape[0] == self.heads[head]:
                           if 'hm' in head:
                               nn.init.constant_(m.bias, -2.19)
                           else:
                               nn.init.normal_(m.weight, std=0.001)
                               nn.init.constant_(m.bias, 0)
-            #pretrained_state_dict = torch.load(pretrained)
-            # url = model_urls['resnet{}'.format(num_layers)]
-            # pretrained_state_dict = model_zoo.load_url(url)
-            # print('=> loading pretrained model {}'.format(url))
-            #self.load_state_dict(torch.load('/home/siasun/JN/ObjectDetect/Networks/NetArch/resnet18-5c106cde.pth'), strict=False)
-            # print(self.state_dict())
+
+            # BACKBONE网络权重加载
+            if not offline_pretrained_model:
+                # 下载预训练模型
+                url = RESNET_MODEL_URLS['resnet{}'.format(num_layers)]
+                pretrained_state_dict = model_zoo.load_url(url)
+            else:
+                # 直接加载预训练模型
+                self.load_state_dict(torch.load('/home/siasun/JN/Object_Detection_and_Tracking/Models/resnet18-5c106cde.pth'), strict=False)
         else:
             print('=> imagenet pretrained model dose not exist')
             print('=> please download it first')
@@ -259,14 +268,18 @@ resnet_spec = {
     152:(Bottleneck, [3, 8, 36, 3])
 }
 
-def get_center_resnet(num_layers, heads):
+def get_center_resnet(num_layers, heads, config):
     """
-    用于构建ResNet网络的主函数
+    构建CenterNet网络模型的函数
     :param num_layers: ResNet的网络层数:18/50/101/152 
     :param heads: 网络的头部
+    :param config: 参数配置对象
     :return: pytorch的模型
     """
+    BN_MOMENTUM = config.RESNET_BN_MOMENTUM
+    RESNET_MODEL_URLS = config.RESNET_MODEL_URLS
     block_class, layers = resnet_spec[num_layers]
     model = PoseResNet(block_class, layers, heads)
-    model.init_weights(num_layers, pretrained=True)
+    if config.CURRENT_PROCESS == 'TRAIN':
+        model.init_weights(num_layers, config.OFFLINE_PRETRINED_MODEL, pretrained=True)
     return model

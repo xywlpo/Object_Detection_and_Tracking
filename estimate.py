@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+# @Time : 2020年4月20日
+# @Author : Jiang Nan
+# @File : estimate.py
+# @Software: PyCharm
+# @contact: xywlpo@163.com
+# -*- 功能说明 -*-
+# 模型评估函数
+# TODO: 评估过程尚未验证
+# -*- 功能说明 -*-
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -11,7 +22,6 @@ def estimation():
     test_dataset = COCO_STYLE('./Datasets/Data', 'val')
     Detector = detector_factory['detection']
     detector = Detector('Models/model_epoch_160.pth')
-
     results = {}
     num_iters = len(test_dataset)
     for idx in range(num_iters):

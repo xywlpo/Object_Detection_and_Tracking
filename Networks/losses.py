@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+# @Time : 2020年4月20日
+# @Author : Jiang Nan
+# @File : losses.py
+# @Software: PyCharm
+# @contact: xywlpo@163.com
+# -*- 功能说明 -*-
+# 此文件定义所有可能需要使用的loss层
+# -*- 功能说明 -*-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -29,6 +38,9 @@ def neg_loss(pred, gt):
     return loss
 
 class RegL1Loss(torch.nn.Module):
+    """
+    定义L1 Loss
+    """
     def __init__(self):
         super(RegL1Loss, self).__init__()
 

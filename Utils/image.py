@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+# @Time : 2020年4月20日
+# @Author : Jiang Nan
+# @File : image.py
+# @Software: PyCharm
+# @contact: xywlpo@163.com
+# -*- 功能说明 -*-
+# 图像相关的处理
+# -*- 功能说明 -*-
+
 import numpy as np
 import cv2
 

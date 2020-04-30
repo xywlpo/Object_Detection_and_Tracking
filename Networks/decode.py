@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+# @Time : 2020年4月20日
+# @Author : Jiang Nan
+# @File : decode.py
+# @Software: PyCharm
+# @contact: xywlpo@163.com
+# -*- 功能说明 -*-
+# 主要用于将模型推理得到的heat_map, wh, reg转换
+# 成标准的bouding box以及类别信息等形式
+# -*- 功能说明 -*-
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -11,9 +22,9 @@ def _nms(heat, kernel=3):
     (1)使用3x3卷积，每个点处放置其3x3邻域内的最大值
     (2)找到最大值的位置设置为1.0，其余位置设置为0
     (3)heat * keep 对应点相乘，恢复最大值点的真实数值，其他位置为0
-    :param heat:
-    :param kernel:
-    :return:
+    :param heat: 热图
+    :param kernel: 卷积核的大小
+    :return: 仅包含局部极值的热图
     """
     pad = (kernel - 1) // 2
     hmax = nn.functional.max_pool2d(heat, (kernel, kernel), stride=1, padding=pad)
@@ -47,7 +58,14 @@ def _topk(scores, K=40):
     return topk_score, topk_inds, topk_clses, topk_ys, topk_xs
 
 
-def ctdet_decode(heat, wh, reg=None, cat_spec_wh=False, K=100):
+def ctdet_decode(heat, wh, reg=None, K=100):
+    """
+    将模型推理得到的heat_map, wh, reg转换成标准的bouding box以及类别信息等形式
+    :param heat: 模型前向传播得到的中心点热图, 即每个类别一张中心点热图
+    :param wh: 2张图, 一张代表width值, 一张代表height值, 每个位置对应中心点热图.
+               这里之所以是2张图主要是每个类别共享width和height的信息
+    :param reg: 中心点的位置偏差
+    """
     batch, cat, height, width = heat.size()
     heat = _nms(heat)
     scores, inds, clses, ys, xs = _topk(heat, K=K)
@@ -60,12 +78,7 @@ def ctdet_decode(heat, wh, reg=None, cat_spec_wh=False, K=100):
         xs = xs.view(batch, K, 1) + 0.5
         ys = ys.view(batch, K, 1) + 0.5
     wh = _transpose_and_gather_feat(wh, inds)
-    if cat_spec_wh:
-        wh = wh.view(batch, K, cat, 2)
-        clses_ind = clses.view(batch, K, 1, 1).expand(batch, K, 1, 2).long()
-        wh = wh.gather(2, clses_ind).view(batch, K, 2)
-    else:
-        wh = wh.view(batch, K, 2)
+    wh = wh.view(batch, K, 2)
     clses = clses.view(batch, K, 1).float()
     scores = scores.view(batch, K, 1)
     bboxes = torch.cat([xs - wh[..., 0:1] / 2,
