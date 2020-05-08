@@ -8,3 +8,10 @@ The platform currently supports CenterNet algorithm, which is a anchor-free obje
 - [ ] support RegNet as BackBone
 - [x] support model training based on pre-trained model
 - [x] support model test and model estimation
+## Installation
+1. The code was tested on Ubuntu 18.04, with Anaconda Python 3.7, Pytorch 1.5.0 and Torchvision 0.5
+2. Install COCOAPI
+`git clone https://github.com/cocodataset/cocoapi.git $COCOAPI`
+`cd $COCOAPI/PythonAPI`
+`make`
+`python setup.py install --user`
