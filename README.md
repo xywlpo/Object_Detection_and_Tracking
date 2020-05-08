@@ -11,7 +11,10 @@ The platform currently supports CenterNet algorithm, which is a anchor-free obje
 ## Installation
 1. The code was tested on Ubuntu 18.04, with Anaconda Python 3.7, Pytorch 1.5.0 and Torchvision 0.5
 2. Install COCOAPI
-`git clone https://github.com/cocodataset/cocoapi.git $COCOAPI`
-`cd $COCOAPI/PythonAPI`
-`make`
-`python setup.py install --user`
+
+```python
+git clone https://github.com/cocodataset/cocoapi.git $COCOAPI
+cd $COCOAPI/PythonAPI
+make
+python setup.py install --user
+```
