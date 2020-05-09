@@ -20,4 +20,4 @@ make
 python setup.py install --user
 ```
 3. Install Others
-> opencv-python Cython numba progress matplotlib easydict scipy
+```opencv-python Cython numba progress matplotlib easydict scipy```
