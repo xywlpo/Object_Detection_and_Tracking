@@ -24,6 +24,6 @@ python setup.py install --user
 ```
 opencv-python Cython numba progress matplotlib easydict scipy
 ```
-4. Datasets
+## Datasets
 Pascal VOC 2007 is adopted to train the model. We supply COCO style datasets. You can download from 
-[Baidu Disk](https://pan.baidu.com/s/10KnfmeVIYzoFOrp7Q9VkFw) and code is et8w
+[Baidu Disk](https://pan.baidu.com/s/10KnfmeVIYzoFOrp7Q9VkFw) and code is **et8w**
