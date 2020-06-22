@@ -17,6 +17,8 @@ import numpy as np
 from config import Config
 from Detectors.detector_factory import detector_factory
 
+import pandas as pd
+
 def inference():
 
     # 创建参数配置对象
