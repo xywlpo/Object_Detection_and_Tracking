@@ -254,7 +254,7 @@ class PoseResNet(nn.Module):
                 pretrained_state_dict = model_zoo.load_url(url)
             else:
                 # 直接加载预训练模型
-                self.load_state_dict(torch.load('/home/siasun/JN/Object_Detection_and_Tracking/Models/resnet18-5c106cde.pth'), strict=False)
+                self.load_state_dict(torch.load('/home/cv/Object_Detection_and_Tracking/Models/resnet50-19c8e357.pth'), strict=False)
         else:
             print('=> imagenet pretrained model dose not exist')
             print('=> please download it first')
@@ -276,8 +276,10 @@ def get_center_resnet(num_layers, heads, config):
     :param config: 参数配置对象
     :return: pytorch的模型
     """
-    BN_MOMENTUM = config.RESNET_BN_MOMENTUM
+    global BN_MOMENTUM, RESNET_MODEL_URLS
+    BN_MOMENTUM= config.RESNET_BN_MOMENTUM
     RESNET_MODEL_URLS = config.RESNET_MODEL_URLS
+
     block_class, layers = resnet_spec[num_layers]
     model = PoseResNet(block_class, layers, heads)
     if config.CURRENT_PROCESS == 'TRAIN':
