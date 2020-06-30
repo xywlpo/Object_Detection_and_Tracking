@@ -24,14 +24,14 @@ def inference():
     # 创建参数配置对象
     config = Config()
     config.CURRENT_PROCESS = 'INFERENCE'
-    config.INFERENCE_MODEL_PATH = 'Models/model_epoch_160.pth'
+    config.INFERENCE_MODEL_PATH = 'model_epoch_17.pth'
 
     # 构建目标检测器
     Detector = detector_factory[config.TASK]
     detector = Detector(config)
 
     # 运行模型检测器
-    ret = detector.run('Images/a5.jpg')
+    ret = detector.run('Images/3.jpg')
 
 if __name__ == '__main__':
     inference()

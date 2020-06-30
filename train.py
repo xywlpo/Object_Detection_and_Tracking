@@ -16,7 +16,7 @@ from collections import defaultdict
 import torch
 import torch.utils.data
 from torch.utils.tensorboard import SummaryWriter
-from Datasets.coco_style import COCO_STYLE
+from Datasets.csv import CSV
 from Networks.model import create_model, save_model
 from Trains.trainer_factory import trainer_factory
 from config import Config
@@ -35,7 +35,7 @@ def main():
     config.CURRENT_PROCESS = 'TRAIN'
 
     # 创建训练数据集迭代器
-    train_dataset = COCO_STYLE(config, 'train')
+    train_dataset = CSV(config, 'train')
 
     # 创建模型网络结构
     model = create_model(config)
@@ -70,7 +70,7 @@ def main():
         for key in loss_list:
             writer.add_scalar("train_{}".format(key), loss_list[key], epoch)
         if epoch % config.INTERVAL_OF_EPOCH == 0:
-            save_model('./model_epoch_{}.pth'.format(epoch), epoch, model, optimizer)
+            save_model('./Log/model_epoch_{}.pth'.format(epoch), epoch, model, optimizer)
 
 if __name__ == '__main__':
     main()

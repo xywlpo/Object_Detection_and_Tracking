@@ -43,19 +43,19 @@ class Config(object):
     LEARNING_RATE = 5e-4
 
     # batchsize
-    BATCH_SIZE = 32
+    BATCH_SIZE = 2
 
     # 工作的线程数量
-    NUMBERS_OF_WORKERS = 4
+    NUMBERS_OF_WORKERS = 1
 
     # 训练时迭代的轮次
-    ALL_EPOCHES = 200
+    ALL_EPOCHES = 50
 
     # 每轮迭代多少次
-    STEPS_OF_EPOCH = 10
+    STEPS_OF_EPOCH = 80
 
     # 多少轮次保存一个模型数据
-    INTERVAL_OF_EPOCH = 40
+    INTERVAL_OF_EPOCH = 1
 
 
     #########################################################
@@ -63,23 +63,19 @@ class Config(object):
     #########################################################
 
     # 数据集路径
-    DATA_DIR = "Datasets/Data/VOC"
+    DATA_DIR = "Datasets/Data/Kaggle/"
 
     # 注释文件字典
     ANN_NAME = {'train':'trainval2007', 'val':'test2007'}
 
     # 类别名称
-    CLASS_NAME = ["aeroplane", "bicycle", "bird", "boat",
-                  "bottle", "bus", "car", "cat", "chair",
-                  "cow", "diningtable", "dog","horse",
-                  "motorbike", "person", "pottedplant",
-                  "sheep", "sofa", "train", "tvmonitor"]
+    CLASS_NAME = ["corn"]
 
     # 类别数量, 不包含背景类
-    NUM_CLASSES = 20
+    NUM_CLASSES = 1
 
     # 数据集默认分辨率, 输入图像统一缩放的尺寸, 顺序为 [height, width]
-    RESOLUTION = [384, 384]
+    RESOLUTION = [1024, 1024]
 
     # 数据集的各通道均值, 用于对输入图像进行0中心化与归一化
     MEAN = [0.485, 0.456, 0.406]
@@ -88,7 +84,7 @@ class Config(object):
     STD = [0.229, 0.224, 0.225]
 
     # 限制一张图片上最多的物体数量
-    MAX_OBJECTS = 50
+    MAX_OBJECTS = 100
 
 
     #########################################################
@@ -96,7 +92,7 @@ class Config(object):
     #########################################################
 
     # 选择的BACKBONE网络结构
-    ARCH = 'resnet_18'
+    ARCH = 'resnet_50'
 
     # 选择的网络头heads
     HEADS = {'hm': NUM_CLASSES, 'wh': 2, 'reg':2}
