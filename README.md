@@ -4,7 +4,7 @@ This project aims to build up a general platform of object detecting and trackin
 The platform currently supports **CenterNet** algorithm, which is a anchor-free object detection algorithm. For the future we will support more types of algorithm. 
 
 - [x] support COCO dataset style
-- [x] 
+- [x] support csv dataset
 - [x] convert PASCAL dataset to COCO dataset
 - [x] support ResNet as BackBone
 - [ ] support RegNet as BackBone
